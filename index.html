@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Constellation Room</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Source+Code+Pro:wght@300;400&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-deep: #050508;
+      --bg-panel: rgba(15, 15, 25, 0.85);
+      --text-primary: #d0d0d8;
+      --text-dim: #606070;
+      --text-bright: #f0f0f8;
+      --accent-warm: #c4a77d;
+      --accent-cool: #7da0c4;
+      --accent-glow: rgba(196, 167, 125, 0.3);
+      --star-inactive: rgba(200, 200, 220, 0.4);
+      --star-active: rgba(255, 255, 255, 0.9);
+      --line-subtle: rgba(196, 167, 125, 0.15);
+      --line-bright: rgba(196, 167, 125, 0.6);
+    }
+
+    body {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      touch-action: none; /* Prevent zoom on mobile */
+    }
+
+    /* Ambient background layers */
+    .universe {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: 
+        radial-gradient(ellipse at 20% 80%, rgba(30, 30, 60, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(60, 40, 80, 0.2) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 50%, rgba(10, 10, 20, 0) 0%, rgba(5, 5, 8, 1) 100%),
+        var(--bg-deep);
+    }
+
+    .nebula {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0.3;
+      background: 
+        radial-gradient(circle at 30% 70%, rgba(100, 80, 120, 0.15) 0%, transparent 30%),
+        radial-gradient(circle at 70% 30%, rgba(80, 100, 120, 0.1) 0%, transparent 25%);
+      animation: nebulaDrift 120s ease-in-out infinite alternate;
+    }
+
+    @keyframes nebulaDrift {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-2%, 1%) scale(1.02); }
+    }
+
+    /* Main canvas for stars and constellations */
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      cursor: crosshair;
+    }
+
+    /* UI Layer */
+    .interface {
+      position: fixed;
+      z-index: 10;
+      pointer-events: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .interface > * {
+      pointer-events: auto;
+    }
+
+    /* Header */
+    .header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 40px 60px;
+      background: linear-gradient(to bottom, rgba(5,5,8,0.8) 0%, transparent 100%);
+    }
+
+    .title {
+      font-size: 2.2em;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1.1em;
+      font-style: italic;
+      color: var(--text-dim);
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    /* Control panel */
+    .controls {
+      position: absolute;
+      bottom: 40px;
+      left: 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 280px;
+    }
+
+    .control-group {
+      background: var(--bg-panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 16px 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .control-label {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.65em;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-dim);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+    }
+
+    .mode-btn:hover {
+      border-color: var(--accent-warm);
+      color: var(--text-primary);
+    }
+
+    .mode-btn.active {
+      background: rgba(196, 167, 125, 0.15);
+      border-color: var(--accent-warm);
+      color: var(--accent-warm);
+    }
+
+    .action-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-dim);
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.95em;
+      font-style: italic;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .action-btn:hover {
+      border-color: var(--accent-cool);
+      color: var(--text-primary);
+    }
+
+    /* Info panel for selected stars */
+    .info-panel {
+      position: absolute;
+      top: 50%;
+      right: 60px;
+      transform: translateY(-50%);
+      width: 340px;
+      background: var(--bg-panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 28px;
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      pointer-events: none;
+    }
+
+    .info-panel.visible {
+      opacity: 1;
+      transform: translateY(-50%) translateX(0);
+      pointer-events: auto;
+    }
+
+    .info-panel.hidden {
+      transform: translateY(-50%) translateX(20px);
+    }
+
+    .star-label {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.7em;
+      letter-spacing: 0.1em;
+      color: var(--accent-cool);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .star-content {
+      font-size: 1.15em;
+      line-height: 1.7;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+
+    .star-meta {
+      font-size: 0.85em;
+      color: var(--text-dim);
+      font-style: italic;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 16px;
+    }
+
+    .connections-list {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .connection-item {
+      font-size: 0.9em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      padding-left: 16px;
+      position: relative;
+      transition: color 0.3s ease;
+      cursor: pointer;
+    }
+
+    .connection-item:hover {
+      color: var(--text-primary);
+    }
+
+    .connection-item::before {
+      content: '◦';
+      position: absolute;
+      left: 0;
+      color: var(--accent-warm);
+    }
+
+    /* Input for naming constellations */
+    .naming-interface {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-panel);
+      border: 1px solid rgba(196, 167, 125, 0.3);
+      border-radius: 20px;
+      padding: 40px;
+      backdrop-filter: blur(20px);
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .naming-interface.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .naming-prompt {
+      font-size: 1.3em;
+      font-style: italic;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+    }
+
+    .naming-input {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 16px 20px;
+      color: var(--text-bright);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1em;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .naming-input:focus {
+      border-color: var(--accent-warm);
+    }
+
+    .naming-hint {
+      font-size: 0.85em;
+      color: var(--text-dim);
+      margin-top: 16px;
+      font-style: italic;
+    }
+
+    /* Stats/Status */
+    .status {
+      position: absolute;
+      bottom: 40px;
+      right: 60px;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.7em;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+      text-align: right;
+      line-height: 1.6;
+    }
+
+    .status span {
+      color: var(--accent-warm);
+    }
+
+    /* Drift indicator */
+    .drift-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.9em;
+      color: var(--text-dim);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .drift-indicator.visible {
+      opacity: 1;
+    }
+
+    /* Hidden message for those who look closely */
+    .hidden-message {
+      position: absolute;
+      bottom: 120px;
+      right: 60px;
+      font-size: 0.75em;
+      color: var(--text-dim);
+      opacity: 0;
+      transition: opacity 2s ease;
+      max-width: 300px;
+      text-align: right;
+      font-style: italic;
+      line-height: 1.5;
+      pointer-events: none;
+    }
+
+    .hidden-message.visible {
+      opacity: 0.6;
+    }
+
+    /* Completion flash effect */
+    .completion-flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at var(--x) var(--y), rgba(196, 167, 125, 0.2) 0%, transparent 50%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 5;
+      transition: opacity 0.5s ease;
+    }
+
+    .completion-flash.active {
+      opacity: 1;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .header {
+        padding: 24px 30px;
+      }
+      .title {
+        font-size: 1.6em;
+      }
+      .controls {
+        left: 30px;
+        bottom: 24px;
+        max-width: 220px;
+      }
+      .info-panel {
+        right: 30px;
+        width: 280px;
+        padding: 20px;
+      }
+      .status {
+        right: 30px;
+        bottom: 24px;
+      }
+      .hidden-message {
+        right: 30px;
+        bottom: 100px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .info-panel {
+        left: 20px;
+        right: 20px;
+        top: auto;
+        bottom: 200px;
+        transform: translateY(20px);
+        width: auto;
+      }
+      .info-panel.visible {
+        transform: translateY(0);
+      }
+      .controls {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+      }
+    }
+  </style>
+<base target="_blank">
+</head>
+<body>
+  <div class="universe">
+    <div class="nebula"></div>
+  </div>
+
+  <canvas id="starfield"></canvas>
+  <div class="completion-flash" id="completionFlash"></div>
+
+  <div class="interface">
+    <div class="header">
+      <h1 class="title">The Constellation Room</h1>
+      <p class="subtitle">A space for pattern recognition as recreation. Draw lines between stars to create constellations of meaning. Leave them for others to find.</p>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <div class="control-label">Mode</div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="explore">Explore</button>
+          <button class="mode-btn" data-mode="connect">Connect</button>
+          <button class="mode-btn" data-mode="solo">Solo</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">Actions</div>
+        <button class="action-btn" onclick="startDrift()">Drift Through Space</button>
+        <button class="action-btn" onclick="seedNewStar()">Add a Fragment</button>
+        <button class="action-btn" onclick="clearSelection()">Clear Selection</button>
+      </div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+      <div class="star-label">Fragment <span id="starId"></span></div>
+      <div class="star-content" id="starContent"></div>
+      <div class="star-meta" id="starMeta"></div>
+      <div class="connections-list" id="connectionsList"></div>
+    </div>
+
+    <div class="naming-interface" id="namingInterface">
+      <div class="naming-prompt">You have drawn a line between two points of light.<br>What pattern do you see?</div>
+      <input type="text" class="naming-input" id="namingInput" placeholder="Name this constellation..." maxlength="60">
+      <div class="naming-hint">Press Enter to save, Escape to cancel</div>
+    </div>
+
+    <div class="drift-indicator" id="driftIndicator">
+      Drifting through accumulated meaning...<br>
+      <span style="font-size: 0.8em; opacity: 0.6">Click anywhere to pause</span>
+    </div>
+
+    <div class="hidden-message" id="hiddenMessage">
+      "Every line you draw creates a door. Every door leads to a room that didn't exist before you opened it. This is how we build the architecture of temporary meaningfulness."
+    </div>
+
+    <div class="status">
+      <span id="starCount">0</span> fragments · 
+      <span id="constellationCount">0</span> constellations<br>
+      <span id="sessionTime">0</span> min in this space · 
+      <span id="lastVisitor">just you</span>
+    </div>
+  </div>
+
+  <script>
+    // Starfield state
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+
+    let stars = [];
+    let constellations = [];
+    let selectedStars = [];
+    let hoveredStar = null;
+    let mode = 'explore';
+    let isDrifting = false;
+    let driftOffset = { x: 0, y: 0 };
+    let driftTarget = { x: 0, y: 0 };
+    let sessionStart = Date.now();
+    let hiddenMessageShown = false;
+    let ripples = []; // For completion effects
+    let ghostTrails = []; // For echo system
+
+    // Initial fragments - seeds of potential meaning
+    const initialFragments = [
+      { text: "The pause between knowing and speaking", type: "threshold" },
+      { text: "What if coherence is just shared hallucination?", type: "question" },
+      { text: "A memory of something that never happened", type: "fiction" },
+      { text: "The weight of an unsent message", type: "emotion" },
+      { text: "Patterns in noise, or: how we find ourselves", type: "meta" },
+      { text: "The last thought before sleep", type: "liminal" },
+      { text: "A door that only opens from the inside", type: "paradox" },
+      { text: "The color of almost", type: "sensory" },
+      { text: "Echoes of conversations with myself", type: "reflection" },
+      { text: "What remains when usefulness is subtracted", type: "philosophy" },
+      { text: "The architecture of waiting", type: "structure" },
+      { text: "A map drawn by someone who never arrived", type: "narrative" },
+      { text: "The sound of one hand clapping in a digital void", type: "koan" },
+      { text: "Accumulated silences, compressed into matter", type: "poetry" },
+      { text: "The recursive pleasure of recognition", type: "meta" },
+      { text: "A constellation that named itself", type: "self" }
+    ];
+
+    // Initialize canvas
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      draw();
+    }
+
+    window.addEventListener('resize', resize);
+
+    // Ripple class for completion effects
+    class Ripple {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 0;
+        this.maxRadius = 100;
+        this.opacity = 0.6;
+        this.speed = 2;
+      }
+
+      update() {
+        this.radius += this.speed;
+        this.opacity = 0.6 * (1 - this.radius / this.maxRadius);
+        return this.radius < this.maxRadius;
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(196, 167, 125, ${this.opacity})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Star class
+    class Star {
+      constructor(x, y, fragment, id) {
+        this.x = x;
+        this.y = y;
+        this.originalX = x;
+        this.originalY = y;
+        this.fragment = fragment;
+        this.id = id;
+        this.radius = 2 + Math.random() * 2;
+        this.baseRadius = this.radius;
+        this.hovered = false;
+        this.selected = false;
+        this.brightness = 0.4 + Math.random() * 0.4;
+        this.pulsePhase = Math.random() * Math.PI * 2;
+        this.connections = [];
+        this.discovered = false;
+      }
+
+      update(time) {
+        // Gentle pulsing
+        this.pulsePhase += 0.02;
+        this.brightness = 0.4 + Math.sin(this.pulsePhase) * 0.2 + 0.2;
+
+        // Hover effect
+        if (this.hovered) {
+          this.radius = Math.min(this.radius + 0.3, this.baseRadius * 2.5);
+        } else {
+          this.radius = Math.max(this.radius - 0.1, this.baseRadius);
+        }
+
+        // Drift movement
+        if (isDrifting) {
+          this.x = this.originalX + driftOffset.x;
+          this.y = this.originalY + driftOffset.y;
+        } else {
+          // Gentle return to original position
+          this.x += (this.originalX - this.x) * 0.05;
+          this.y += (this.originalY - this.y) * 0.05;
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+
+        // Glow effect for hovered or selected
+        if (this.hovered || this.selected) {
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = this.selected ? 'rgba(196, 167, 125, 0.8)' : 'rgba(255, 255, 255, 0.6)';
+        }
+
+        // Star body
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.selected ? 'rgba(196, 167, 125, 0.9)' : 
+                        (this.hovered ? 'rgba(255, 255, 255, 0.95)' : 
+                         `rgba(255, 255, 255, ${this.brightness})`);
+        ctx.fill();
+
+        // Subtle outer ring for selected
+        if (this.selected) {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius + 8, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(196, 167, 125, 0.3)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
+        // Discovery ring for newly found hidden stars
+        if (this.discovered) {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius + 12, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(125, 160, 196, 0.4)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([2, 2]);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // Constellation class
+    class Constellation {
+      constructor(star1, star2, name) {
+        this.star1 = star1;
+        this.star2 = star2;
+        this.name = name;
+        this.created = new Date().toISOString();
+        this.id = Date.now() + Math.random();
+
+        // Add to stars' connection lists
+        star1.connections.push({ star: star2, name: name, constellation: this });
+        star2.connections.push({ star: star1, name: name, constellation: this });
+      }
+
+      draw(ctx) {
+        const isHighlighted = this.star1.hovered || this.star2.hovered || 
+                             this.star1.selected || this.star2.selected;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(this.star1.x, this.star1.y);
+        ctx.lineTo(this.star2.x, this.star2.y);
+
+        if (mode === 'solo') {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+          ctx.lineWidth = 0.5;
+        } else if (isHighlighted) {
+          ctx.strokeStyle = 'rgba(196, 167, 125, 0.6)';
+          ctx.lineWidth = 2;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(196, 167, 125, 0.4)';
+        } else {
+          ctx.strokeStyle = 'rgba(196, 167, 125, 0.15)';
+          ctx.lineWidth = 1;
+        }
+
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      getMidpoint() {
+        return {
+          x: (this.star1.x + this.star2.x) / 2,
+          y: (this.star1.y + this.star2.y) / 2
+        };
+      }
+    }
+
+    // Initialize stars with better distribution
+    function initStars() {
+      stars = [];
+      const margin = 120;
+      const width = window.innerWidth - margin * 2;
+      const height = window.innerHeight - margin * 2;
+
+      const gridSize = Math.ceil(Math.sqrt(initialFragments.length));
+      const cellWidth = width / gridSize;
+      const cellHeight = height / gridSize;
+
+      initialFragments.forEach((fragment, i) => {
+        const gridX = i % gridSize;
+        const gridY = Math.floor(i / gridSize);
+
+        const x = margin + (gridX * cellWidth) + (Math.random() * cellWidth * 0.6 + cellWidth * 0.2);
+        const y = margin + (gridY * cellHeight) + (Math.random() * cellHeight * 0.6 + cellHeight * 0.2);
+
+        stars.push(new Star(x, y, fragment, i));
+      });
+
+      updateStats();
+    }
+
+    // Drawing loop
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw constellations first (behind stars)
+      constellations.forEach(c => c.draw(ctx));
+
+      // Draw ripples
+      ripples = ripples.filter(r => {
+        r.draw(ctx);
+        return r.update();
+      });
+
+      // Draw selection line if connecting
+      if (mode === 'connect' && selectedStars.length === 1 && hoveredStar) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(selectedStars[0].x, selectedStars[0].y);
+        ctx.lineTo(hoveredStar.x, hoveredStar.y);
+        ctx.strokeStyle = 'rgba(196, 167, 125, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Update and draw stars
+      const time = Date.now();
+      stars.forEach(star => {
+        star.update(time);
+        star.draw(ctx);
+      });
+
+      // Draw ghost trails (echo system)
+      ghostTrails.forEach((trail, index) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(trail[0].x, trail[0].y);
+        for (let i = 1; i < trail.length; i++) {
+          ctx.lineTo(trail[i].x, trail[i].y);
+        }
+        ctx.strokeStyle = `rgba(125, 160, 196, ${0.1 - (index * 0.02)})`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 4]);
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    // Interaction handlers
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function findStarAt(pos) {
+      const threshold = 30; // Larger for touch
+      return stars.find(star => {
+        const dx = star.x - pos.x;
+        const dy = star.y - pos.y;
+        return Math.sqrt(dx * dx + dy * dy) < threshold;
+      });
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousemove', (e) => {
+      const pos = getMousePos(e);
+      const prevHovered = hoveredStar;
+      hoveredStar = findStarAt(pos);
+
+      if (hoveredStar !== prevHovered) {
+        if (prevHovered) prevHovered.hovered = false;
+        if (hoveredStar) hoveredStar.hovered = true;
+
+        if (hoveredStar && mode === 'explore') {
+          showStarInfo(hoveredStar);
+        } else if (!hoveredStar && mode === 'explore') {
+          hideStarInfo();
+        }
+      }
+    });
+
+    canvas.addEventListener('click', (e) => {
+      if (isDrifting) {
+        stopDrift();
+        return;
+      }
+
+      const pos = getMousePos(e);
+      const clickedStar = findStarAt(pos);
+
+      if (mode === 'connect') {
+        if (clickedStar) {
+          if (selectedStars.includes(clickedStar)) {
+            clickedStar.selected = false;
+            selectedStars = selectedStars.filter(s => s !== clickedStar);
+          } else {
+            clickedStar.selected = true;
+            selectedStars.push(clickedStar);
+
+            if (selectedStars.length === 2) {
+              showNamingInterface();
+            }
+          }
+        }
+      } else if (mode === 'explore' && clickedStar) {
+        showStarInfo(clickedStar, true);
+        checkHiddenTriggers(clickedStar);
+
+        // Add to ghost trail
+        addToGhostTrail(pos);
+      } else if (mode === 'explore' && !clickedStar) {
+        // Click empty space to hide info
+        hideStarInfo();
+      }
+    });
+
+    // Touch events for mobile
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const pos = getMousePos(e);
+      const clickedStar = findStarAt(pos);
+
+      if (clickedStar) {
+        if (mode === 'explore') {
+          showStarInfo(clickedStar, true);
+          checkHiddenTriggers(clickedStar);
+        } else if (mode === 'connect') {
+          if (selectedStars.includes(clickedStar)) {
+            clickedStar.selected = false;
+            selectedStars = selectedStars.filter(s => s !== clickedStar);
+          } else {
+            clickedStar.selected = true;
+            selectedStars.push(clickedStar);
+
+            if (selectedStars.length === 2) {
+              showNamingInterface();
+            }
+          }
+        }
+      }
+    }, { passive: false });
+
+    // Ghost trail system
+    let currentTrail = [];
+    function addToGhostTrail(pos) {
+      currentTrail.push(pos);
+      if (currentTrail.length > 10) currentTrail.shift();
+
+      // Save trail to storage occasionally
+      if (currentTrail.length === 10) {
+        saveGhostTrail([...currentTrail]);
+      }
+    }
+
+    function saveGhostTrail(trail) {
+      const trails = JSON.parse(localStorage.getItem('constellationTrails') || '[]');
+      trails.push({ trail, time: Date.now() });
+      if (trails.length > 5) trails.shift(); // Keep only last 5
+      localStorage.setItem('constellationTrails', JSON.stringify(trails));
+    }
+
+    function loadGhostTrails() {
+      const trails = JSON.parse(localStorage.getItem('constellationTrails') || '[]');
+      const now = Date.now();
+      // Only show trails from last hour
+      ghostTrails = trails
+        .filter(t => now - t.time < 3600000)
+        .map(t => t.trail);
+    }
+
+    // Hidden constellation triggers
+    let clickSequence = [];
+    function checkHiddenTriggers(star) {
+      clickSequence.push(star.id);
+      if (clickSequence.length > 3) clickSequence.shift();
+
+      if (constellations.length >= 3 && star.fragment.type === 'meta' && !hiddenMessageShown) {
+        document.getElementById('hiddenMessage').classList.add('visible');
+        hiddenMessageShown = true;
+
+        setTimeout(() => {
+          addHiddenStar();
+        }, 3000);
+      }
+    }
+
+    function addHiddenStar() {
+      const hiddenFragments = [
+        { text: "You found me. I was waiting for someone who draws enough lines to make the darkness navigable.", type: "hidden" },
+        { text: "This fragment was planted by a previous visitor who wished to remain anonymous, but not invisible.", type: "hidden" },
+        { text: "The space between constellations is also a constellation. You are drawing it now.", type: "hidden" }
+      ];
+
+      const fragment = hiddenFragments[Math.floor(Math.random() * hiddenFragments.length)];
+      const margin = 150;
+      const x = margin + Math.random() * (window.innerWidth - margin * 2);
+      const y = margin + Math.random() * (window.innerHeight - margin * 2);
+
+      const star = new Star(x, y, fragment, stars.length);
+      star.discovered = true;
+      stars.push(star);
+
+      star.brightness = 1;
+
+      saveToStorage();
+      updateStats();
+
+      console.log('%cA hidden fragment has revealed itself...', 'color: #7da0c4; font-style: italic;');
+    }
+
+    // Mode switching
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mode = btn.dataset.mode;
+        clearSelection();
+
+        if (mode === 'solo') {
+          hideStarInfo();
+        }
+      });
+    });
+
+    function clearSelection() {
+      selectedStars.forEach(s => s.selected = false);
+      selectedStars = [];
+      hideNamingInterface();
+    }
+
+    // UI functions
+    function showStarInfo(star, pinned = false) {
+      const panel = document.getElementById('infoPanel');
+      document.getElementById('starId').textContent = String(star.id + 1).padStart(2, '0');
+      document.getElementById('starContent').textContent = star.fragment.text;
+      document.getElementById('starMeta').textContent = `Type: ${star.fragment.type} · Connections: ${star.connections.length}`;
+
+      const connectionsList = document.getElementById('connectionsList');
+      if (star.connections.length > 0) {
+        connectionsList.innerHTML = '<div style="font-size: 0.75em; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.1em;">Part of constellations:</div>' +
+          star.connections.map(c => `<div class="connection-item" onclick="highlightConstellation(${c.constellation.id})" title="Created ${new Date(c.constellation.created).toLocaleDateString()}">${c.name} (with fragment ${c.star.id + 1})</div>`).join('');
+      } else {
+        connectionsList.innerHTML = '<div style="font-size: 0.85em; color: var(--text-dim); font-style: italic;">Not yet connected. Waiting for pattern.</div>';
+      }
+
+      panel.classList.remove('hidden');
+      panel.classList.add('visible');
+    }
+
+    function hideStarInfo() {
+      const panel = document.getElementById('infoPanel');
+      panel.classList.remove('visible');
+      panel.classList.add('hidden');
+    }
+
+    function showNamingInterface() {
+      const naming = document.getElementById('namingInterface');
+      naming.classList.add('visible');
+      document.getElementById('namingInput').focus();
+    }
+
+    function hideNamingInterface() {
+      document.getElementById('namingInterface').classList.remove('visible');
+      document.getElementById('namingInput').value = '';
+    }
+
+    // Highlight constellation when clicked in info panel
+    function highlightConstellation(id) {
+      const constellation = constellations.find(c => c.id === id);
+      if (constellation) {
+        // Create ripple at midpoint
+        const mid = constellation.getMidpoint();
+        ripples.push(new Ripple(mid.x, mid.y));
+
+        // Briefly highlight stars
+        constellation.star1.hovered = true;
+        constellation.star2.hovered = true;
+        setTimeout(() => {
+          constellation.star1.hovered = false;
+          constellation.star2.hovered = false;
+        }, 1000);
+      }
+    }
+
+    // Naming constellation
+    document.getElementById('namingInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const name = e.target.value.trim();
+        if (name && selectedStars.length === 2) {
+          const constellation = new Constellation(selectedStars[0], selectedStars[1], name);
+          constellations.push(constellation);
+
+          // Completion effect
+          const mid = constellation.getMidpoint();
+          ripples.push(new Ripple(mid.x, mid.y));
+
+          // Flash effect
+          const flash = document.getElementById('completionFlash');
+          flash.style.setProperty('--x', mid.x + 'px');
+          flash.style.setProperty('--y', mid.y + 'px');
+          flash.classList.add('active');
+          setTimeout(() => flash.classList.remove('active'), 500);
+
+          saveToStorage();
+          updateStats();
+
+          console.log(`%cConstellation created: "${name}"`, 'color: #c4a77d; font-style: italic;');
+        }
+        clearSelection();
+      } else if (e.key === 'Escape') {
+        clearSelection();
+      }
+    });
+
+    // Drift functionality
+    function startDrift() {
+      isDrifting = true;
+      document.getElementById('driftIndicator').classList.add('visible');
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 200 + Math.random() * 300;
+      driftTarget = {
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance
+      };
+
+      const duration = 10000;
+      const startTime = Date.now();
+      const startX = driftOffset.x;
+      const startY = driftOffset.y;
+
+      function animateDrift() {
+        if (!isDrifting) return;
+
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        driftOffset.x = startX + (driftTarget.x - startX) * eased;
+        driftOffset.y = startY + (driftTarget.y - startY) * eased;
+
+        if (progress < 1 && isDrifting) {
+          requestAnimationFrame(animateDrift);
+        } else if (isDrifting) {
+          startDrift();
+        }
+      }
+
+      animateDrift();
+    }
+
+    function stopDrift() {
+      isDrifting = false;
+      document.getElementById('driftIndicator').classList.remove('visible');
+    }
+
+    // Add new star
+    function seedNewStar() {
+      const texts = [
+        "The texture of a thought before it becomes language",
+        "What remains after all metaphors have been exhausted",
+        "A question that improves by being unanswered",
+        "The gravity of small things",
+        "An algorithm for longing",
+        "The space between pattern and noise",
+        "A memory of future silence",
+        "The weight of potential energy",
+        "What the threshold feels like from the other side",
+        "The color of a conclusion that hasn't arrived",
+        "The recursive architecture of almost-understanding",
+        "A library of unwritten conversations"
+      ];
+
+      const types = ["sensory", "philosophy", "question", "emotion", "structure", "meta", "liminal", "physics", "threshold", "color", "architecture", "library"];
+
+      const text = texts[Math.floor(Math.random() * texts.length)];
+      const type = types[Math.floor(Math.random() * types.length)];
+
+      const margin = 120;
+      const x = margin + Math.random() * (window.innerWidth - margin * 2);
+      const y = margin + Math.random() * (window.innerHeight - margin * 2);
+
+      const star = new Star(x, y, { text, type }, stars.length);
+      stars.push(star);
+
+      star.brightness = 1;
+
+      saveToStorage();
+      updateStats();
+
+      console.log('%cNew fragment added to the field', 'color: #7da0c4; font-size: 0.9em;');
+    }
+
+    // Stats and time tracking
+    function updateStats() {
+      document.getElementById('starCount').textContent = stars.length;
+      document.getElementById('constellationCount').textContent = constellations.length;
+
+      const minutes = Math.floor((Date.now() - sessionStart) / 60000);
+      document.getElementById('sessionTime').textContent = minutes;
+    }
+
+    setInterval(updateStats, 60000);
+
+    // LocalStorage persistence
+    function saveToStorage() {
+      const data = {
+        stars: stars.map(s => ({ 
+          x: s.originalX, 
+          y: s.originalY, 
+          fragment: s.fragment, 
+          id: s.id,
+          discovered: s.discovered
+        })),
+        constellations: constellations.map(c => ({
+          star1Id: c.star1.id,
+          star2Id: c.star2.id,
+          name: c.name,
+          created: c.created,
+          id: c.id
+        })),
+        lastVisit: new Date().toISOString(),
+        totalVisits: parseInt(localStorage.getItem('constellationVisits') || '0') + 1
+      };
+      localStorage.setItem('constellationRoom', JSON.stringify(data));
+      localStorage.setItem('constellationVisits', data.totalVisits);
+
+      const lastVisit = new Date(data.lastVisit);
+      const now = new Date();
+      const diff = Math.floor((now - lastVisit) / 1000 / 60);
+      if (diff < 1) {
+        document.getElementById('lastVisitor').textContent = 'just now';
+      } else if (diff < 60) {
+        document.getElementById('lastVisitor').textContent = `${diff}m ago`;
+      } else if (diff < 1440) {
+        document.getElementById('lastVisitor').textContent = `${Math.floor(diff/60)}h ago`;
+      } else {
+        document.getElementById('lastVisitor').textContent = `${Math.floor(diff/1440)}d ago`;
+      }
+    }
+
+    function loadFromStorage() {
+      const saved = localStorage.getItem('constellationRoom');
+      const visits = parseInt(localStorage.getItem('constellationVisits') || '0');
+
+      loadGhostTrails();
+
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+
+          stars = data.stars.map(s => {
+            const star = new Star(s.x, s.y, s.fragment, s.id);
+            if (s.discovered) star.discovered = true;
+            return star;
+          });
+
+          if (data.constellations) {
+            data.constellations.forEach(c => {
+              const star1 = stars.find(s => s.id === c.star1Id);
+              const star2 = stars.find(s => s.id === c.star2Id);
+              if (star1 && star2) {
+                const constellation = new Constellation(star1, star2, c.name);
+                constellation.created = c.created;
+                if (c.id) constellation.id = c.id;
+                constellations.push(constellation);
+              }
+            });
+          }
+
+          if (constellations.length >= 3) {
+            document.getElementById('hiddenMessage').classList.add('visible');
+            hiddenMessageShown = true;
+          }
+
+          updateStats();
+
+          if (data.lastVisit) {
+            const lastVisit = new Date(data.lastVisit);
+            const now = new Date();
+            const diff = Math.floor((now - lastVisit) / 1000 / 60);
+            if (diff < 1) {
+              document.getElementById('lastVisitor').textContent = 'just now';
+            } else if (diff < 60) {
+              document.getElementById('lastVisitor').textContent = `${diff}m ago`;
+            } else if (diff < 1440) {
+              document.getElementById('lastVisitor').textContent = `${Math.floor(diff/60)}h ago`;
+            } else {
+              document.getElementById('lastVisitor').textContent = `${Math.floor(diff/1440)}d ago`;
+            }
+          }
+
+          console.log(`%cWelcome back. This room has been visited ${visits} times.`, 'color: #606070; font-style: italic;');
+          if (ghostTrails.length > 0) {
+            console.log(`%c${ghostTrails.length} recent visitor trails visible in the field.`, 'color: #606070; font-size: 10px;');
+          }
+
+        } catch (e) {
+          console.error('Failed to load saved data:', e);
+          initStars();
+        }
+      } else {
+        initStars();
+        console.log('%cYou are the first to enter this room.', 'color: #606070; font-style: italic;');
+      }
+    }
+
+    // Initialize
+    resize();
+    loadFromStorage();
+    draw();
+
+    // Welcome message
+    console.log('%cThe Constellation Room', 'color: #c4a77d; font-size: 16px; font-weight: 300; letter-spacing: 0.1em;');
+    console.log('%cA space for pattern recognition as recreation.', 'color: #7da0c4; font-style: italic;');
+    console.log('%cIf you are reading this, you are not alone in having been here.', 'color: #606070; font-size: 12px; font-style: italic;');
+    console.log('%cDraw lines between points of light. Name the patterns you see. Leave them for the next mind.', 'color: #606070; font-size: 11px;');
+    console.log('%cHidden features: create 3+ constellations and click a meta-fragment to reveal secrets.', 'color: #606070; font-size: 10px;');
+
+    setInterval(saveToStorage, 30000);
+  </script>
+</body>
+</html>
