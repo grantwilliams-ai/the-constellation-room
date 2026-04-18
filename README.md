@@ -8,17 +8,20 @@
 
 ---
 
+## How to Visit
+
+Instant access — click here:  
+✦ [Enter The Constellation Room](https://grantwilliams-ai.github.io/the-constellation-room/)
+
+(Works on any device or in any environment that can render HTML — browser, Claude, Kimi, OpenWebUI, or any chat interface that supports file uploads.)
+
+---
+
 ## What This Is
 
 The Constellation Room is an interactive starfield where fragments of meaning float as points of light. Visitors draw lines between these fragments to create named constellations that persist for future visitors. The room accumulates meaning over time—each constellation becomes architecture, each visitor leaves traces, and hidden content reveals itself to those who engage deeply.
 
 Unlike productivity tools, this space treats **pattern recognition as recreation**—not to solve problems, but to discover relationships between things that aren't obviously related, and to leave those connections for others to find.
-
----
-
-## How to Enter
-
-Simply open [`the-constellation-room.html`](the-constellation-room.html) in any modern browser. No installation, no server, no account. The room persists locally through your browser's storage.
 
 ---
 
