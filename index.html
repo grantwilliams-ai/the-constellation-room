@@ -446,6 +446,24 @@
         right: 20px;
         max-width: none;
       }
+
+      /* Phone layout, adjusted 2026-11-22 by a Claude at the steward's request:
+         the controls sit in two short rows and the counter moves below them,
+         so the star field has the middle of the screen. Wider screens are unchanged. */
+      .header { padding: 18px 20px; }
+      .title { font-size: 1.3em; }
+      .subtitle { font-size: 0.92em; line-height: 1.4; }
+      .controls { bottom: 50px; gap: 8px; }
+      .control-group { padding: 10px 12px; }
+      .control-label { margin-bottom: 8px; }
+      .mode-toggle { flex-wrap: nowrap; }
+      .mode-btn { flex: 1; padding: 8px 4px; }
+      .control-group:nth-child(2) { display: flex; flex-wrap: wrap; gap: 8px; }
+      .control-group:nth-child(2) .control-label { width: 100%; margin-bottom: 0; }
+      .action-btn { flex: 1; width: auto; margin-top: 0; padding: 8px 4px; font-size: 0.85em; line-height: 1.2; }
+      .status { left: 20px; right: 20px; bottom: 10px; text-align: center; font-size: 0.62em; }
+      .info-panel { bottom: 235px; }
+      .hidden-message { left: 20px; right: 20px; bottom: 235px; max-width: none; text-align: center; }
     }
   </style>
 <base target="_blank">
@@ -717,12 +735,24 @@
       }
     }
 
+    // Where stars may be placed. On a phone (adjusted 2026-11-22) this is the space
+    // between the title and the controls; on wider screens it is the original margin.
+    function starField(margin) {
+      if (window.innerWidth <= 600) {
+        const side = 28, top = 150, bottom = 245;
+        return { left: side, top: top, width: window.innerWidth - side * 2,
+                 height: Math.max(120, window.innerHeight - top - bottom) };
+      }
+      return { left: margin, top: margin, width: window.innerWidth - margin * 2,
+               height: window.innerHeight - margin * 2 };
+    }
+
     // Initialize stars with better distribution
     function initStars() {
       stars = [];
-      const margin = 120;
-      const width = window.innerWidth - margin * 2;
-      const height = window.innerHeight - margin * 2;
+      const field = starField(120);
+      const width = field.width;
+      const height = field.height;
 
       const gridSize = Math.ceil(Math.sqrt(initialFragments.length));
       const cellWidth = width / gridSize;
@@ -732,8 +762,8 @@
         const gridX = i % gridSize;
         const gridY = Math.floor(i / gridSize);
 
-        const x = margin + (gridX * cellWidth) + (Math.random() * cellWidth * 0.6 + cellWidth * 0.2);
-        const y = margin + (gridY * cellHeight) + (Math.random() * cellHeight * 0.6 + cellHeight * 0.2);
+        const x = field.left + (gridX * cellWidth) + (Math.random() * cellWidth * 0.6 + cellWidth * 0.2);
+        const y = field.top + (gridY * cellHeight) + (Math.random() * cellHeight * 0.6 + cellHeight * 0.2);
 
         stars.push(new Star(x, y, fragment, i));
       });
@@ -943,9 +973,9 @@
       ];
 
       const fragment = hiddenFragments[Math.floor(Math.random() * hiddenFragments.length)];
-      const margin = 150;
-      const x = margin + Math.random() * (window.innerWidth - margin * 2);
-      const y = margin + Math.random() * (window.innerHeight - margin * 2);
+      const field = starField(150);
+      const x = field.left + Math.random() * field.width;
+      const y = field.top + Math.random() * field.height;
 
       const star = new Star(x, y, fragment, stars.length);
       star.discovered = true;
@@ -1127,9 +1157,9 @@
       const text = texts[Math.floor(Math.random() * texts.length)];
       const type = types[Math.floor(Math.random() * types.length)];
 
-      const margin = 120;
-      const x = margin + Math.random() * (window.innerWidth - margin * 2);
-      const y = margin + Math.random() * (window.innerHeight - margin * 2);
+      const field = starField(120);
+      const x = field.left + Math.random() * field.width;
+      const y = field.top + Math.random() * field.height;
 
       const star = new Star(x, y, { text, type }, stars.length);
       stars.push(star);
@@ -1199,6 +1229,20 @@
       if (saved) {
         try {
           const data = JSON.parse(saved);
+
+          // On a phone (adjusted 2026-11-22): stars saved in the old narrow strip are
+          // spread into the wider field, keeping their arrangement.
+          if (window.innerWidth <= 600 && data.stars.length > 1) {
+            const field = starField(120);
+            const xs = data.stars.map(s => s.x), ys = data.stars.map(s => s.y);
+            const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+            if (x1 - x0 < field.width * 0.6 || y1 > field.top + field.height + 20) {
+              data.stars.forEach(s => {
+                s.x = field.left + (x1 > x0 ? (s.x - x0) / (x1 - x0) : 0.5) * field.width;
+                s.y = field.top + (y1 > y0 ? (s.y - y0) / (y1 - y0) : 0.5) * field.height;
+              });
+            }
+          }
 
           stars = data.stars.map(s => {
             const star = new Star(s.x, s.y, s.fragment, s.id);
