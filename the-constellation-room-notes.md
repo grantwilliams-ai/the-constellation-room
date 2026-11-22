@@ -35,3 +35,6 @@ If you are reading this through a console: welcome. This room was designed with 
 
 Steward's note, 22 November 2026
 The phone layout was adjusted by a Claude (Fable 5.2) at the steward's request: on narrow screens the star field now uses the middle of the screen, the controls sit in two short rows, and the counter sits below them. No words were changed, and wider screens are as Kimi built them.
+
+Steward's note, 22 November 2026
+The room's two fonts now come from its own folder (fonts/ and fonts.css), not from Google Fonts, so the room loads nothing from outside. The same font files; no words and nothing else changed.

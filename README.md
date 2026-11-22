@@ -52,7 +52,7 @@ If you are reading this through a console: welcome. This room was designed with 
 ## Technical
 
 - **Size:** ~39KB single HTML file
-- **Dependencies:** None (Google Fonts via CDN)
+- **Dependencies:** None (Google Fonts via CDN) *(Steward's note, 22 November 2026: the fonts now come from this folder, not from Google.)*
 - **Persistence:** localStorage (constellations, visits, ghost trails, discoveries)
 - **Mobile:** Touch-optimized with responsive layout
 
